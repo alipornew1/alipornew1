@@ -1,0 +1,184 @@
+{
+  "dns": {
+    "fallbackStrategy": "disabled_if_any_match",
+    "hosts": {
+      "domain:googleapis.cn": "googleapis.com"
+    },
+    "queryStrategy": "UseIPv6",
+    "servers": [
+      {
+        "address": "https://8.8.8.8/dns-query",
+        "queryStrategy": "UseIPv6"
+      },
+      {
+        "address": "https+local://223.5.5.5/dns-query",
+        "domains": [],
+        "fallbackStrategy": "disabled",
+        "uidList": [
+          10221
+        ]
+      }
+    ]
+  },
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 2080,
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      },
+      "tag": "socks"
+    },
+    {
+      "listen": "127.0.0.1",
+      "port": 6450,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "address": "8.8.8.8",
+        "network": "tcp,udp",
+        "port": 53
+      },
+      "tag": "dns-in"
+    }
+  ],
+  "log": {
+    "loglevel": "debug"
+  },
+  "outbounds": [
+    {
+      "domainStrategy": "AsIs",
+      "protocol": "http",
+      "settings": {
+        "servers": [
+          {
+            "address": "127.0.0.1",
+            "port": 1080,
+            "users": [
+              {
+                "pass": "",
+                "user": "b.a"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "tcpSettings": {}
+      },
+      "tag": "proxy"
+    },
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    },
+    {
+      "protocol": "freedom",
+      "tag": "bypass"
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block"
+    },
+    {
+      "protocol": "dns",
+      "settings": {
+        "userLevel": 1
+      },
+      "tag": "dns-out"
+    }
+  ],
+  "policy": {
+    "levels": {
+      "1": {
+        "connIdle": 30
+      }
+    }
+  },
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "inboundTag": [
+          "dns-in"
+        ],
+        "outboundTag": "dns-out",
+        "type": "field"
+      },
+      {
+        "domain": [
+          "domain:ir"
+        ],
+        "outboundTag": "bypass",
+        "type": "field"
+      },
+      {
+        "ip": [
+          "geoip:ir"
+        ],
+        "outboundTag": "bypass",
+        "type": "field"
+      },
+      {
+        "outboundTag": "bypass",
+        "type": "field",
+        "uidList": [
+          10221
+        ]
+      }
+    ]
+  }
+}ting": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "inboundTag": [
+          "dns-in"
+        ],
+        "outboundTag": "dns-out",
+        "type": "field"
+      },
+      {
+        "ip": [
+          "geoip:private"
+        ],
+        "outboundTag": "bypass",
+        "type": "field"
+      },
+      {
+        "domain": [
+          "domain:appcenter.ms",
+          "domain:app-measurement.com",
+          "domain:firebase.io",
+          "domain:crashlytics.com",
+          "domain:google-analytics.com"
+        ],
+        "outboundTag": "block",
+        "type": "field"
+      },
+      {
+        "domain": [
+          "domain:ir"
+        ],
+        "outboundTag": "bypass",
+        "type": "field"
+      },
+      {
+        "ip": [
+          "geoip:ir"
+        ],
+        "outboundTag": "bypass",
+        "type": "field"
+      },
+      {
+        "ip": [
+          "255.255.255.255"
+        ],
+        "outboundTag": "block",
+        "type": "field"
+      }
+    ]
+  }
+}
